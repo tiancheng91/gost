@@ -85,6 +85,16 @@ func (r *route) parseChain() (*gost.Chain, error) {
 			go gost.PeriodReload(peerCfg, cfg)
 		}
 
+		// 定时刷新节点配置
+		go func(ngroup *gost.NodeGroup, ns string) {
+			for {
+				time.Sleep(10 * time.Second)
+				nodes, _ = parseChainNode(ns)
+				ngroup.SetNodes(nodes...)
+				log.Logf("[refresh] node list: %+v", nodes)
+			}
+		}(ngroup, ns)
+
 		chain.AddNodeGroup(ngroup)
 	}
 
