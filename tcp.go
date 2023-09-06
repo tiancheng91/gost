@@ -1,6 +1,12 @@
 package gost
 
-import "net"
+import (
+	"errors"
+	"net"
+	"time"
+
+	"github.com/go-log/log"
+)
 
 // tcpTransporter is a raw TCP transporter.
 type tcpTransporter struct{}
@@ -21,7 +27,38 @@ func (tr *tcpTransporter) Dial(addr string, options ...DialOption) (net.Conn, er
 		timeout = DialTimeout
 	}
 	if opts.Chain == nil {
-		return net.DialTimeout("tcp", addr, timeout)
+		rAddr, _ := net.ResolveTCPAddr("tcp", addr)
+
+		// ipv4
+		if rAddr == nil || net.ParseIP(rAddr.IP.String()).To16() == nil {
+			conn, err := net.DialTimeout("tcp", addr, timeout)
+			log.Logf("[tcp]dial %s from ipv4, err: %+v", addr, err)
+			return conn, err
+		}
+
+		// ipv6 使用随机出口ip
+		var (
+			conn *net.TCPConn
+			err  error
+		)
+
+		done := make(chan bool, 1)
+		go func() {
+			lAddr := GetLocalAddress()
+			conn, err = net.DialTCP("tcp", lAddr, rAddr)
+			log.Logf("[tcp]dial %s from %s, err: %+v", addr, lAddr.IP.String(), err)
+			done <- true
+		}()
+
+		select {
+		case <-time.After(timeout):
+			log.Logf("[ws]dial timeout %s", addr)
+			return nil, errors.New("dial timeout")
+		case <-done:
+			//
+		}
+
+		return conn, err
 	}
 	return opts.Chain.Dial(addr)
 }

@@ -42,7 +42,6 @@ func (c *httpConnector) ConnectContext(ctx context.Context, conn net.Conn, netwo
 	for _, option := range options {
 		option(opts)
 	}
-
 	timeout := opts.Timeout
 	if timeout <= 0 {
 		timeout = ConnectTimeout

@@ -163,6 +163,11 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		tlsCfg.Certificates = []tls.Certificate{cert}
 	}
 
+	localInterface := node.Get("interface")
+	if len(localInterface) > 0 {
+		gost.InitLocalAddress(localInterface)
+	}
+
 	wsOpts := &gost.WSOptions{}
 	wsOpts.EnableCompression = node.GetBool("compression")
 	wsOpts.ReadBufferSize = node.GetInt("rbuf")
