@@ -10,7 +10,7 @@ import (
 	"github.com/go-log/log"
 )
 
-var localIpv6 []*net.TCPAddr
+var localIpv6 []string
 
 func InitLocalAddress(interfaceName string) {
 	interfaces, err := net.Interfaces()
@@ -41,14 +41,16 @@ func InitLocalAddress(interfaceName string) {
 			}
 
 			log.Logf("load local ipv6 %s", ip.String())
-			ipAddr, _ := net.ResolveTCPAddr("tcp", ip.String())
-			localIpv6 = append(localIpv6, ipAddr)
+			localIpv6 = append(localIpv6, ip.String())
 		}
 	}
 }
 
 func GetLocalAddress() *net.TCPAddr {
 	rand.Seed(time.Now().UnixMilli())
-	index := rand.Intn(len(localIpv6))
-	return localIpv6[index]
+	ipv6Addr := localIpv6[rand.Intn(len(localIpv6))]
+	ipv6Addr = fmt.Sprintf("[%s]:0", ipv6Addr)
+
+	tcpAddr, _ := net.ResolveTCPAddr("tcp", ipv6Addr)
+	return tcpAddr
 }

@@ -30,7 +30,7 @@ func (tr *tcpTransporter) Dial(addr string, options ...DialOption) (net.Conn, er
 		rAddr, _ := net.ResolveTCPAddr("tcp", addr)
 
 		// ipv4
-		if rAddr == nil || net.ParseIP(rAddr.IP.String()).To16() == nil {
+		if rAddr == nil || rAddr.IP.To4() != nil {
 			conn, err := net.DialTimeout("tcp", addr, timeout)
 			log.Logf("[tcp]dial %s from ipv4, err: %+v", addr, err)
 			return conn, err
